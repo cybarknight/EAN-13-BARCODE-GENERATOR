@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EAN-13 Barcode Generator</title>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: Arial, sans-serif;
+    }
+    .form-container {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .barcodeContainer {
+      display: inline-block;
+      padding: 10px;
+      text-align: center;
+      border: 1px solid #000;
+      margin-bottom: 20px;
+    }
+    .barcodeItemNumber {
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    svg {
+      display: block;
+      margin: 0 auto;
+    }
+    .barcodeCode {
+      font-size: 14px;
+      margin-top: 5px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+<h1>EAN-13 Barcode Generator</h1>
+<div class="form-container">
+  <input type="text" id="barcodeInput" placeholder="Enter 13-digit EAN-13 number" maxlength="13">
+  <input type="text" id="itemInput" placeholder="Enter Item Number" maxlength="20">
+  <input type="number" id="quantityInput" placeholder="Number of Barcodes" min="1" max="100">
+  <button id="generateButton">Generate Barcodes</button>
+</div>
+<div id="barcodesContainer"></div>
+
+<script>
+  document.getElementById('generateButton').addEventListener('click', function () {
+    const input = document.getElementById('barcodeInput').value.trim();
+    const itemNumber = document.getElementById('itemInput').value.trim();
+    const quantity = parseInt(document.getElementById('quantityInput').value, 10);
+    const barcodesContainer = document.getElementById('barcodesContainer');
+    barcodesContainer.innerHTML = ''; // Clear previous barcodes
+
+    if (input.length === 13 && /^[0-9]+$/.test(input) && quantity > 0) {
+      const checkDigit = calculateEAN13CheckDigit(input.slice(0, 12));
+      if (checkDigit === parseInt(input[12], 10)) {
+        for (let i = 0; i < quantity; i++) {
+          const barcodeDiv = document.createElement('div');
+          barcodeDiv.className = 'barcodeContainer';
+          barcodeDiv.innerHTML = `
+              <div class="barcodeItemNumber">ITEM NO: ${itemNumber}</div>
+              <svg class="barcodeSVG"></svg>
+
+            `;
+          barcodesContainer.appendChild(barcodeDiv);
+
+          JsBarcode(barcodeDiv.querySelector('.barcodeSVG'), input, {
+            format: "EAN13",
+            lineColor: "#000",
+            width: 2,
+            height: 60,
+            displayValue: true,
+            fontSize: 14,
+            textMargin: 0,
+          });
+        }
+      } else {
+        alert("The check digit is incorrect. Please enter a valid EAN-13 number.");
+      }
+    } else {
+      alert("Please enter a valid 13-digit EAN-13 number and quantity.");
+    }
+  });
+
+  function calculateEAN13CheckDigit(number) {
+    let sum = 0;
+    for (let i = 0; i < number.length; i++) {
+      sum += parseInt(number[i], 10) * (i % 2 === 0 ? 1 : 3);
+    }
+    return (10 - (sum % 10)) % 10;
+  }
+</script>
+</body>
+</html>
